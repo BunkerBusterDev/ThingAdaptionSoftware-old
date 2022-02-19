@@ -1,0 +1,8 @@
+{
+  "name": "things",
+  "version": "0.0.1",
+  "main": "src/things.js",
+  "repository": "git@github.com:BunkerBusterDev/things-nodejs.git",
+  "author": "BunkerBusterDev <bunkerbusterdev@gmail.com>",
+  "license": "MIT"
+}
