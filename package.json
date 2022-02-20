@@ -1,9 +1,9 @@
 {
   "name": "things",
   "version": "0.0.1",
-  "main": "src/things.js",
+  "main": "src/app.js",
   "scripts": {
-    "dev": "cross-env NODE_PATH=src nodemon --inspect src/things --exec babel-node",
+    "dev": "cross-env NODE_PATH=src nodemon --inspect src/app --exec babel-node",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": "git@github.com:BunkerBusterDev/things-nodejs.git",
