@@ -1,0 +1,143 @@
+import net from 'net';
+
+import { sleep } from 'lib/sleep';
+import config from 'config';
+import ContentInstance from 'thingConnector/contentInstance';
+
+let state = '';
+let applicationEntityConnector = null;
+let thingDownloadCount = 0;
+
+const onReceive = (data) => {
+    if (state === 'wait' || state === 'connected') {
+        let dataArray = data.toString().split('<EOF>');
+
+        if(dataArray.length >= 2) {
+            for (let i = 0; i < dataArray.length - 1; i++) {
+                let line = dataArray[i];
+                let lineToJson = JSON.parse(line.toString());
+
+                if (lineToJson.containerName == null || lineToJson.content == null) {
+                    console.log('Received: data format mismatch');
+                }
+                else {
+                    if (lineToJson.content == 'hello') {
+                        console.log(`Received: ${line}`);
+
+                        thingDownloadCount++;
+                    }
+                    else {
+                        for (let j = 0; j < config.uploadArray.length; j++) {
+                            if (config.uploadArray[j].name === lineToJson.containerName) {
+                                console.log(`ACK : ${line} <----`);
+                                break;
+                            }
+                        }
+
+                        for (let j = 0; j < config.downloadArray.length; j++) {
+                            if (config.downloadArray[j].name === lineToJson.containerName) {
+                                let strjson = JSON.stringify({id: config.downloadArray[i].id, content: lineToJson.content});
+                                console.log(`${strjson} <----`);
+                                // control_led(lineToJson.content);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+const onError = (error) => {
+    console.log(`[Application Entity Connector] : ${error}`);
+    state = '';
+    restart();
+}
+
+const onClose = () => {
+    console.log('[Application Entity Connector] : close');
+    state = '';
+    restart();
+}
+
+exports.initialize = () => {
+    return new Promise(async (resolve, reject) => {
+        applicationEntityConnector = new net.Socket();
+
+        applicationEntityConnector.on('data', onReceive);
+        applicationEntityConnector.on('error', onError);
+        applicationEntityConnector.on('close', onClose);
+
+        if(applicationEntityConnector) {
+            console.log('[Application Entity Connector] : init success');
+            resolve({state: 'init-thingConnector'});
+        } else {
+            reject('[Application Entity Connector] : init failed')
+        }
+    });
+}
+
+exports.connect = () => {
+    return new Promise(async (resolve, reject) => {
+        if(state != 'wait') {
+            state = 'wait';
+            try {
+                applicationEntityConnector.connect(config.thing.parentPort, config.thing.parentHost, () => {
+                    console.log('[Application Entity Connector] : Connected');
+                    
+                    thingDownloadCount = 0;
+                    for (var i = 0; i < config.downloadArray.length; i++) {
+                        console.log('download Connected - ' + config.downloadArray[i].name + ' hello');
+                        let contentInstance = {containerName: config.downloadArray[i].name, content: 'hello'};
+                        applicationEntityConnector.write(JSON.stringify(contentInstance) + '<EOF>');
+                    }
+
+                    sleep(1000).then(() => {
+                        if (thingDownloadCount >= config.downloadArray.length) {
+                            thingDownloadCount = 0;
+                            state = 'connected';
+                            resolve({state: 'start-sensing'});
+                        }
+                    });
+                });
+            } catch (error) {
+                state = '';
+                reject(error);
+            }
+        }
+    });
+}
+
+exports.uploadContentInstance = () => {
+    const contentInstanceArray = ContentInstance.getContentInstance();
+
+    let checkIsNew = true;
+    
+    for(let i=0; i<contentInstanceArray.length; i++) {
+        if(!contentInstanceArray[i].isNew) {
+            checkIsNew = false;
+        }
+    }
+
+    if(checkIsNew) {
+        for(let i=0; i<contentInstanceArray.length; i++) {
+            let cin = {containerName: contentInstanceArray[i].name, content: contentInstanceArray[i].content};
+            console.log(`SEND : ${JSON.stringify(cin)} ---->`);
+            applicationEntityConnector.write(JSON.stringify(cin) + '<EOF>');
+        }
+    }
+}
+
+exports.restart = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if(applicationEntityConnector) {
+                applicationEntityConnector.destroy();
+            }
+            resolve();
+        } catch (error) {
+            reject(error);
+        }
+    });
+}

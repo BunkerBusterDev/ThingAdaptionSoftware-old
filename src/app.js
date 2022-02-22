@@ -1,33 +1,48 @@
-import wdt from 'lib/wdt';
+import WatchdogTimer from 'lib/watchdogTimer';
 
-import data from 'data';
-import AeClient from 'ae_client';
-import ThingConnector from 'thing_connector';
+import ApplicationEntityConnector from 'applicationEntityConnector';
+import ThingConnector from 'thingConnector';
 
-let initState = 'init_aeClient';
+let initState = 'init-applicationEntityConnector';
 
 const initialize = async () => {
     console.log(`[initState] : ${initState}`);
     try {
-        if (initState === 'init_aeClient') {
-            const { state } = await AeClient.initialize();
+        if (initState === 'init-applicationEntityConnector') {
+            const { state } = await ApplicationEntityConnector.initialize();
             initState = state;
-        } else if(initState === 'init_thingConnector') {
+        } else if(initState === 'init-thingConnector') {
             const { state } = await ThingConnector.initialize();
             initState = state;
-        } else if(initState ==='connect_aeClient') {
-            const { state } = await AeClient.connect();
+        } else if(initState ==='connect-applicationEntityConnector') {
+            const { state } = await ApplicationEntityConnector.connect();
             initState = state;
-        } else if(initState === 'start_sensing') {
-            wdt.set_wdt('app/onSensing', 1, ThingConnector.startSensing);
+        } else if(initState === 'start-sensing') {
+            WatchdogTimer.setWatchdogTimer('app/onSensing', 1, ThingConnector.startSensing);
             initState = 'ready';
         } else if(initState === 'ready') {
-            console.log(data.getData());
-            // wdt.del_wdt('app/initialize');
+            WatchdogTimer.setWatchdogTimer('applicationEntityConnector/uploadContentInstance', 3, ApplicationEntityConnector.uploadContentInstance);
+            WatchdogTimer.deleteWatchdogTimer('app/initialize');
         }
-    } catch (e) {
-        console.log(e);
+    } catch (error) {
+        console.log(error);
+        initState = 'init-applicationEntityConnector';
     }
 }
 
-wdt.set_wdt('app/initialize', 1, initialize);
+global.restart = async () => {
+    try {
+        await ApplicationEntityConnector.restart();
+        await ThingConnector.restart();
+        await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
+        await WatchdogTimer.deleteWatchdogTimer('applicationEntityConnector/uploadContentInstance');
+
+        initState = 'init-applicationEntityConnector';
+        await WatchdogTimer.deleteWatchdogTimer('app/initialize');
+        await WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
