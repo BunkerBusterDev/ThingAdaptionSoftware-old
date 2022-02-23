@@ -2,7 +2,6 @@ import net from 'net';
 
 import { sleep } from 'lib/sleep';
 import config from 'config';
-import ContentInstance from 'thingConnector/contentInstance';
 
 let state = '';
 let applicationEntityConnector = null;
@@ -109,23 +108,27 @@ exports.connect = () => {
     });
 }
 
-exports.uploadContentInstance = () => {
-    const contentInstanceArray = ContentInstance.getContentInstance();
-
-    let checkIsNew = true;
-    
-    for(let i=0; i<contentInstanceArray.length; i++) {
-        if(!contentInstanceArray[i].isNew) {
-            checkIsNew = false;
-        }
-    }
-
-    if(checkIsNew) {
-        for(let i=0; i<contentInstanceArray.length; i++) {
-            let cin = {containerName: contentInstanceArray[i].name, content: contentInstanceArray[i].content};
+exports.uploadContentInstance = (containerName, content) => {
+    for(let i=0; i<config.uploadArray.length; i++) {
+        if(config.uploadArray[i].name === containerName) {
+            let cin = {containerName: containerName, content: content};
             console.log(`SEND : ${JSON.stringify(cin)} ---->`);
             applicationEntityConnector.write(JSON.stringify(cin) + '<EOF>');
         }
+    }
+}
+
+exports.uploadContentInstanceAll = (contentInstanceArray) => {
+    let checkUploadArray = true;
+
+    for(let i=0; i<config.uploadArray.length; i++) {
+        if(config.uploadArray[i].name != contentInstanceArray[i].containerName) {
+            checkUploadArray = false;
+        }
+    }
+
+    if(checkUploadArray) {
+        applicationEntityConnector.write(JSON.stringify(contentInstanceArray) + '<EOF>');
     }
 }
 

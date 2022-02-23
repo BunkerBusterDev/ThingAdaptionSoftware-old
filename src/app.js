@@ -21,7 +21,6 @@ const initialize = async () => {
             WatchdogTimer.setWatchdogTimer('app/onSensing', 1, ThingConnector.startSensing);
             initState = 'ready';
         } else if(initState === 'ready') {
-            WatchdogTimer.setWatchdogTimer('applicationEntityConnector/uploadContentInstance', 3, ApplicationEntityConnector.uploadContentInstance);
             WatchdogTimer.deleteWatchdogTimer('app/initialize');
         }
     } catch (error) {
@@ -35,7 +34,6 @@ global.restart = async () => {
         await ApplicationEntityConnector.restart();
         await ThingConnector.restart();
         await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
-        await WatchdogTimer.deleteWatchdogTimer('applicationEntityConnector/uploadContentInstance');
 
         initState = 'init-applicationEntityConnector';
         await WatchdogTimer.deleteWatchdogTimer('app/initialize');

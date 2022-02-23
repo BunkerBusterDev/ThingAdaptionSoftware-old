@@ -3,7 +3,7 @@ import dgram from 'dgram';
 import config from 'config';
 import { sleep } from 'lib/sleep';
 
-import ContentInstance from 'thingConnector/contentInstance';
+import ApplicationEntityConnector from 'applicationEntityConnector';
 
 let state = '';
 let thingConnector = null;
@@ -22,29 +22,34 @@ const onMessage = (message) => {
 
         if(responseData.includes('data') && responseData.includes('}]}')) {
             responseData = responseData.substring(responseData.indexOf('data')-2, responseData.length);
-            let dataArray = JSON.parse(responseData).data;
+            let thingDataArray = JSON.parse(responseData).data;
 
             //// 임시 데이터 ///
-            for(let i=1; i<5; i++) {
-                dataArray[i] = {
+            for(let i=1; i<10; i++) {
+                thingDataArray[i] = {
                     count: `${i}`,
-                    type: dataArray[0].type,
-                    mac: dataArray[0].mac.replace('200', `20${i}`),
-                    illum: (dataArray[0].illum*1+(Math.random()*2-1)).toFixed(2),
+                    type: thingDataArray[0].type,
+                    mac: thingDataArray[0].mac.replace('200', `20${i}`),
+                    illum: (thingDataArray[0].illum*1+(Math.random()*2-1)).toFixed(2),
                     rxTick: `${(Math.random()*(1000)).toFixed(2)}`
                 }
             }
 
-            for(let i=0; i<dataArray.length; i++) {
-                const name = `container_illum_${dataArray[i].count*1+1}`;
-                const content = `${dataArray[i].illum}`;
-                ContentInstance.setContentInstance(name, content);
+            if(state === 'connected') {
+                let contentInstanceArray = [];
+                for(let i=0; i<thingDataArray.length; i++) {
+                    contentInstanceArray[i] = {};
+                    contentInstanceArray[i].containerName = `container_illum_${thingDataArray[i].count*1+1}`;
+                    contentInstanceArray[i].content = `${thingDataArray[i].illum}`;
+                    ApplicationEntityConnector.uploadContentInstance(contentInstanceArray[i].containerName, contentInstanceArray[i].content);
+                }
+                // ApplicationEntityConnector.uploadContentInstanceAll(contentInstanceArray);
             }
         }
     }
 }
 
-const onClose = () => {
+const onError = () => {
     console.log('[Thing Connector] : close');
     restart();
 }
@@ -71,7 +76,7 @@ exports.initialize = () => {
             thingConnector = dgram.createSocket('udp4');
             thingConnector.on('listening', onListening);
             thingConnector.on('message', onMessage);        
-            thingConnector.on('close', onClose);
+            thingConnector.on('error', onError);
     
             try {
                 thingConnector.bind(config.thing.port);
