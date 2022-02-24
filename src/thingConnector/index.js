@@ -51,6 +51,7 @@ const onMessage = (message) => {
 
 const onError = () => {
     console.log('[Thing Connector] : close');
+    state = '';
     restart();
 }
 
@@ -60,6 +61,7 @@ const onSensing = () => {
             const message = new Buffer.from('AT+PRINT=SENSOR_DATA\r\n');
             await thingConnector.send(message, 0, message.length, config.thing.port, config.thing.host, (error) => {
                 if (error) {
+                    state = '';
                     reject(`[Thing Connector] : request sensor data failed\r\n${error}`);
                 } else {
                     resolve(true);
@@ -90,6 +92,7 @@ exports.initialize = () => {
                     }
                 });
             } catch (error) {
+                state = '';
                 reject(error);
             }
         }
