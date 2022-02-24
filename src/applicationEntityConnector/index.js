@@ -61,7 +61,7 @@ const onClose = () => {
 }
 
 exports.initialize = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         applicationEntityConnector = new net.Socket();
 
         applicationEntityConnector.on('data', onReceive);
@@ -78,7 +78,7 @@ exports.initialize = () => {
 }
 
 exports.connect = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         if(state != 'wait') {
             state = 'wait';
             try {
@@ -133,7 +133,7 @@ exports.uploadContentInstanceAll = (contentInstanceArray) => {
 }
 
 exports.restart = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             if(applicationEntityConnector) {
                 applicationEntityConnector.destroy();

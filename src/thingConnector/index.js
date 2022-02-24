@@ -56,10 +56,10 @@ const onError = () => {
 }
 
 const onSensing = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         if(state === 'wait' || state === 'connected') {
             const message = new Buffer.from('AT+PRINT=SENSOR_DATA\r\n');
-            await thingConnector.send(message, 0, message.length, config.thing.port, config.thing.host, (error) => {
+            thingConnector.send(message, 0, message.length, config.thing.port, config.thing.host, (error) => {
                 if (error) {
                     state = '';
                     reject(`[Thing Connector] : request sensor data failed\r\n${error}`);
@@ -72,7 +72,7 @@ const onSensing = () => {
 }
 
 exports.initialize = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         if(state != 'wait') {
             state = 'wait';
             thingConnector = dgram.createSocket('udp4');
@@ -82,14 +82,14 @@ exports.initialize = () => {
     
             try {
                 thingConnector.bind(config.thing.port);
-                await onSensing();
-                
-                sleep(1000).then(() => {
-                    if(responseData != '') {
-                        responseData = '';
-                        state = 'connected';
-                        resolve({state: 'connect-applicationEntityConnector'});
-                    }
+                onSensing().then(() => {
+                    sleep(1000).then(() => {
+                        if(responseData != '') {
+                            responseData = '';
+                            state = 'connected';
+                            resolve({state: 'connect-applicationEntityConnector'});
+                        }
+                    });
                 });
             } catch (error) {
                 state = '';
@@ -104,7 +104,7 @@ exports.startSensing = () => {
 }
 
 exports.restart = () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             if(thingConnector) {
                 thingConnector.close();

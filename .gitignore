@@ -40,6 +40,7 @@ yarn.lock
 
 # others
 .idea
+.eslintrc.js
 package-lock.json
 
 .DS_STORE
