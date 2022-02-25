@@ -88,12 +88,14 @@ exports.initialize = () => {
                             responseData = '';
                             state = 'connected';
                             resolve({state: 'connect-applicationEntityConnector'});
+                        } else {
+                            reject('[Thing Connector] : UDP message is sent but no response');
                         }
                     });
                 });
             } catch (error) {
                 state = '';
-                reject(error);
+                reject(`[Thing Connector] : ${error}`);
             }
         }
     });

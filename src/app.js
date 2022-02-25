@@ -24,23 +24,18 @@ const initialize = async () => {
             WatchdogTimer.deleteWatchdogTimer('app/initialize');
         }
     } catch (error) {
-        console.log(error);
-        initState = 'init-applicationEntityConnector';
+        restart();
     }
 }
 
 global.restart = async () => {
-    try {
-        await ApplicationEntityConnector.restart();
-        await ThingConnector.restart();
-        await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
+    await ApplicationEntityConnector.restart();
+    await ThingConnector.restart();
+    await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
 
-        initState = 'init-applicationEntityConnector';
-        await WatchdogTimer.deleteWatchdogTimer('app/initialize');
-        await WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
-    } catch (error) {
-        console.log(error);
-    }
+    initState = 'init-applicationEntityConnector';
+    await WatchdogTimer.deleteWatchdogTimer('app/initialize');
+    await WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
 }
 
 WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
