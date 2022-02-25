@@ -79,7 +79,7 @@ exports.initialize = () => {
 
 exports.connect = () => {
     return new Promise((resolve, reject) => {
-        if(state != 'wait') {
+        if(state !== 'wait') {
             state = 'wait';
             try {
                 applicationEntityConnector.connect(config.thing.parentPort, config.thing.parentHost, () => {
@@ -87,7 +87,7 @@ exports.connect = () => {
                     
                     thingDownloadCount = 0;
                     for (var i = 0; i < config.downloadArray.length; i++) {
-                        console.log('download Connected - ' + config.downloadArray[i].name + ' hello');
+                        console.log(`download Connected - ${config.downloadArray[i].name} hello`);
                         let contentInstance = {containerName: config.downloadArray[i].name, content: 'hello'};
                         applicationEntityConnector.write(JSON.stringify(contentInstance) + '<EOF>');
                     }
@@ -122,7 +122,7 @@ exports.uploadContentInstanceAll = (contentInstanceArray) => {
     let checkUploadArray = true;
 
     for(let i=0; i<config.uploadArray.length; i++) {
-        if(config.uploadArray[i].name != contentInstanceArray[i].containerName) {
+        if(config.uploadArray[i].name !== contentInstanceArray[i].containerName) {
             checkUploadArray = false;
         }
     }

@@ -73,7 +73,7 @@ const onSensing = () => {
 
 exports.initialize = () => {
     return new Promise((resolve, reject) => {
-        if(state != 'wait') {
+        if(state !== 'wait') {
             state = 'wait';
             thingConnector = dgram.createSocket('udp4');
             thingConnector.on('listening', onListening);
@@ -84,7 +84,7 @@ exports.initialize = () => {
                 thingConnector.bind(config.thing.port);
                 onSensing().then(() => {
                     sleep(1000).then(() => {
-                        if(responseData != '') {
+                        if(responseData !== '') {
                             responseData = '';
                             state = 'connected';
                             resolve({state: 'connect-applicationEntityConnector'});
