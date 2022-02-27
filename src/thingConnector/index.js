@@ -56,19 +56,15 @@ const onError = () => {
 }
 
 const onSensing = () => {
-    return new Promise((resolve, reject) => {
-        if(state === 'wait' || state === 'connected') {
-            const message = new Buffer.from('AT+PRINT=SENSOR_DATA\r\n');
-            thingConnector.send(message, 0, message.length, config.thing.port, config.thing.host, (error) => {
-                if (error) {
-                    state = '';
-                    reject(`[Thing Connector] : request sensor data failed\r\n${error}`);
-                } else {
-                    resolve(true);
-                }
-            });
-        }
-    });
+    if(state === 'wait' || state === 'connected') {
+        const message = new Buffer.from('AT+PRINT=SENSOR_DATA\r\n');
+        thingConnector.send(message, 0, message.length, config.thing.port, config.thing.host, (error) => {
+            if (error) {
+                state = '';
+                console.log(`[Thing Connector] : request sensor data failed\r\n${error}`);
+            }
+        });
+    }
 }
 
 exports.initialize = () => {
@@ -82,16 +78,15 @@ exports.initialize = () => {
     
             try {
                 thingConnector.bind(config.thing.port);
-                onSensing().then(() => {
-                    sleep(1000).then(() => {
-                        if(responseData !== '') {
-                            responseData = '';
-                            state = 'connected';
-                            resolve({state: 'connect-applicationEntityConnector'});
-                        } else {
-                            reject('[Thing Connector] : UDP message is sent but no response');
-                        }
-                    });
+                onSensing();
+                sleep(1000).then(() => {
+                    if(responseData !== '') {
+                        responseData = '';
+                        state = 'connected';
+                        resolve({state: 'connect-applicationEntityConnector'});
+                    } else {
+                        reject('[Thing Connector] : UDP message is sent but no response');
+                    }
                 });
             } catch (error) {
                 state = '';
@@ -107,13 +102,14 @@ exports.startSensing = () => {
 
 exports.restart = () => {
     return new Promise((resolve, reject) => {
+        state = '';
         try {
             if(thingConnector) {
                 thingConnector.close();
             }
-            resolve();
+            resolve('[Thing Connector] : restart');
         } catch (error) {
-            reject('[Thing Connector] : not running');
+            console.log('[Thing Connector] : not running');
         }
     });
 }

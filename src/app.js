@@ -29,11 +29,13 @@ const initialize = async () => {
 }
 
 global.restart = async () => {
+    console.log("ThningAdaptionSoftware restart");
+    initState = 'init-applicationEntityConnector';
+
     await ApplicationEntityConnector.restart();
     await ThingConnector.restart();
     await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
 
-    initState = 'init-applicationEntityConnector';
     await WatchdogTimer.deleteWatchdogTimer('app/initialize');
     await WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
 }
