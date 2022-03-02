@@ -2,39 +2,40 @@ import net from 'net';
 
 import { sleep } from 'lib/sleep';
 import config from 'config';
+import App from 'app';
 
 let state = '';
 let applicationEntityConnector = null;
 let thingDownloadCount = 0;
 
 const onReceive = (data) => {
-    if (state === 'wait' || state === 'connected') {
+    if(state === 'wait' || state === 'connected') {
         let dataArray = data.toString().split('<EOF>');
 
         if(dataArray.length >= 2) {
-            for (let i = 0; i < dataArray.length - 1; i++) {
+            for(let i = 0; i < dataArray.length - 1; i++) {
                 let line = dataArray[i];
                 let lineToJson = JSON.parse(line.toString());
 
-                if (lineToJson.containerName == null || lineToJson.content == null) {
+                if(lineToJson.containerName === undefined || lineToJson.content === undefined) {
                     console.log('Received: data format mismatch');
                 }
                 else {
-                    if (lineToJson.content == 'hello') {
+                    if(lineToJson.content === 'hello') {
                         console.log(`Received: ${line}`);
 
                         thingDownloadCount++;
                     }
                     else {
-                        for (let j = 0; j < config.uploadArray.length; j++) {
-                            if (config.uploadArray[j].name === lineToJson.containerName) {
+                        for(let j = 0; j < config.uploadArray.length; j++) {
+                            if(config.uploadArray[j].name === lineToJson.containerName) {
                                 console.log(`ACK : ${line} <----`);
                                 break;
                             }
                         }
 
-                        for (let j = 0; j < config.downloadArray.length; j++) {
-                            if (config.downloadArray[j].name === lineToJson.containerName) {
+                        for(let j = 0; j < config.downloadArray.length; j++) {
+                            if(config.downloadArray[j].name === lineToJson.containerName) {
                                 let strjson = JSON.stringify({id: config.downloadArray[i].id, content: lineToJson.content});
                                 console.log(`${strjson} <----`);
                                 // control_led(lineToJson.content);
@@ -51,13 +52,13 @@ const onReceive = (data) => {
 const onError = (error) => {
     console.log(`[Application Entity Connector] : ${error}`);
     state = '';
-    restart();
+    App.restart();
 }
 
 const onClose = () => {
     console.log('[Application Entity Connector] : close');
     state = '';
-    restart();
+    App.restart();
 }
 
 exports.initialize = () => {
@@ -86,14 +87,14 @@ exports.connect = () => {
                     console.log('[Application Entity Connector] : Connected');
                     
                     thingDownloadCount = 0;
-                    for (var i = 0; i < config.downloadArray.length; i++) {
+                    for(let i = 0; i < config.downloadArray.length; i++) {
                         console.log(`download Connected - ${config.downloadArray[i].name} hello`);
                         let contentInstance = {containerName: config.downloadArray[i].name, content: 'hello'};
                         applicationEntityConnector.write(JSON.stringify(contentInstance) + '<EOF>');
                     }
 
                     sleep(1000).then(() => {
-                        if (thingDownloadCount >= config.downloadArray.length) {
+                        if(thingDownloadCount >= config.downloadArray.length) {
                             thingDownloadCount = 0;
                             state = 'connected';
                             resolve({state: 'start-sensing'});
@@ -133,14 +134,7 @@ exports.uploadContentInstanceAll = (contentInstanceArray) => {
 }
 
 exports.restart = () => {
-    return new Promise((resolve, reject) => {
-        try {
-            if(applicationEntityConnector) {
-                applicationEntityConnector.destroy();
-            }
-            resolve();
-        } catch (error) {
-            reject(error);
-        }
-    });
+    if(applicationEntityConnector) {
+        applicationEntityConnector.destroy();
+    }
 }

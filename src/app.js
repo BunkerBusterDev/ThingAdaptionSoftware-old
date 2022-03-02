@@ -8,7 +8,7 @@ let initState = 'init-applicationEntityConnector';
 const initialize = async () => {
     console.log(`[initState] : ${initState}`);
     try {
-        if (initState === 'init-applicationEntityConnector') {
+        if(initState === 'init-applicationEntityConnector') {
             const { state } = await ApplicationEntityConnector.initialize();
             initState = state;
         } else if(initState === 'init-thingConnector') {
@@ -28,14 +28,16 @@ const initialize = async () => {
     }
 }
 
-global.restart = async () => {
-    await ApplicationEntityConnector.restart();
-    await ThingConnector.restart();
-    await WatchdogTimer.deleteWatchdogTimer('app/onSensing');
-
+exports.restart = function() {
+    console.log("ThingAdaptionSoftware restart");
     initState = 'init-applicationEntityConnector';
-    await WatchdogTimer.deleteWatchdogTimer('app/initialize');
-    await WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
+    
+    ApplicationEntityConnector.restart();
+    ThingConnector.restart();
+    WatchdogTimer.deleteWatchdogTimer('app/onSensing');
+
+    WatchdogTimer.deleteWatchdogTimer('app/initialize');
+    WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);
 }
 
 WatchdogTimer.setWatchdogTimer('app/initialize', 1, initialize);

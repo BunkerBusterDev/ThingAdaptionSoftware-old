@@ -12,7 +12,7 @@ for(let i=0; i<config.uploadArray.length; i++) {
 exports.getContentInstance = (name) => {
     if(name) {
         for(let i=0; i<contentInstance.length; i++) {
-            if(contentInstance[i].name == name) {
+            if(contentInstance[i].name === name) {
                 return contentInstance[i].content;
             }
         }
@@ -23,7 +23,7 @@ exports.getContentInstance = (name) => {
 
 exports.setContentInstance = (name, content) => {
     for(let i=0; i<contentInstance.length; i++) {
-        if(contentInstance[i].name == name) {
+        if(contentInstance[i].name === name) {
             contentInstance[i].content = content;
             contentInstance[i].isNew = true;
         }
