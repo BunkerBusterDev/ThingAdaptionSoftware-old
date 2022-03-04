@@ -24,7 +24,12 @@ const initialize = async () => {
             WatchdogTimer.deleteWatchdogTimer('app/initialize');
         }
     } catch (error) {
-        restart();
+        console.log(error);
+        initState = 'init-applicationEntityConnector';
+        
+        ApplicationEntityConnector.restart();
+        ThingConnector.restart();
+        WatchdogTimer.deleteWatchdogTimer('app/onSensing');
     }
 }
 
