@@ -13,7 +13,7 @@ setInterval(() =>  {
 }, 1000);
 
 watchdogTimer.on('watchdog', () => {
-    for (let id in watchdogTimerValueQueue) {
+    for(let id in watchdogTimerValueQueue) {
         // eslint-disable-next-line
         if(watchdogTimerValueQueue.hasOwnProperty(id)) {
             ++watchdogTickQueue[id];
